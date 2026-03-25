@@ -153,6 +153,20 @@ def test_draft_runner(model_id, expected_runner_type, expected_convert_type):
     assert config.convert_type == expected_convert_type
 
 
+@pytest.mark.parametrize(
+    ("model_id", "convert"),
+    [
+        ("Qwen/Qwen2.5-0.5B-Instruct", "classify"),
+        ("Qwen/Qwen2.5-0.5B-Instruct", "embed"),
+    ],
+)
+def test_convert_runner_mismatch(model_id, convert):
+    """Test that using a pooling convert type with a generate runner raises
+    a clear error instead of crashing later during model initialization."""
+    with pytest.raises(ValueError, match="--runner pooling"):
+        ModelConfig(model_id, convert=convert)
+
+
 MODEL_IDS_EXPECTED = [
     ("Qwen/Qwen1.5-7B", 32768),
     ("mistralai/Mistral-7B-v0.1", 4096),

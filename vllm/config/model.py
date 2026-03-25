@@ -518,6 +518,23 @@ class ModelConfig:  # type: ignore[misc]
             architectures, self.runner_type, self.convert
         )
 
+        # Validate convert/runner compatibility: if the user explicitly
+        # requested a convert type that belongs to a different runner,
+        # raise a clear error instead of crashing later during model init.
+        if self.convert != "auto" and self.convert_type != "none":
+            required_runner: RunnerType | None = None
+            for runner_key, converts in _RUNNER_CONVERTS.items():
+                if self.convert_type in converts:
+                    required_runner = runner_key
+                    break
+            if required_runner is not None and self.runner_type != required_runner:
+                raise ValueError(
+                    f"The `--convert {self.convert_type}` option requires "
+                    f"`--runner {required_runner}`, but the current runner "
+                    f"is '{self.runner_type}'. Please pass "
+                    f"`--runner {required_runner}` explicitly."
+                )
+
         if self.runner_type == "generate" and not is_generative_model:
             generate_converts = _RUNNER_CONVERTS["generate"]
             if self.convert_type not in generate_converts:
